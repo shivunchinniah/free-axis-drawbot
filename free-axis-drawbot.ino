@@ -25,7 +25,9 @@ L298M motorB(MOTOR_B1, MOTOR_B2);
 
 // Arrays for data logging
 
-#define LOG_SIZE 300
+#define LOG_SIZE 400
+
+#define VERSION 1.2
 
 // 4 bytes per ulong
 unsigned long time_stamp[LOG_SIZE];
@@ -46,6 +48,7 @@ void setup() {
   Serial.begin(115200);
   cmdInit(115200);
 
+  cmdAdd("v", version);
   cmdAdd("re", readEncoders);
   cmdAdd("rs", resetEncoders);
   cmdAdd("sm", setMotors);
@@ -57,15 +60,20 @@ void loop() {
   cmdPoll();
 
   if (logging) {
-    if (log_idx < LOG_SIZE) {
+    if(log_idx < LOG_SIZE) {
       captureLog();
     } else {
       logging = false;
       log_idx = 0;
       printLog();
-      stopMotors(0, nullptr);
+      stopMotors(0, nullptr); 
     }
+    
   }
+}
+
+void version(){
+  Serial.println(VERSION);
 }
 
 void captureLog() {
@@ -74,7 +82,7 @@ void captureLog() {
 
     time_stamp[log_idx] = micros();
     a_log[log_idx] = encoderA.dt();
-    b_log[log_idx] = encoderA.dtRaw();
+    b_log[log_idx] = encoderA.dt();
 
     log_idx++;
     olda = encoderA.read();

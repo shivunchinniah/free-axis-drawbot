@@ -9,6 +9,10 @@ EncoderEvery *EncoderEvery::ISR_D = nullptr;
 EncoderEvery::EncoderEvery(unsigned int triggerPin, unsigned int directionPin, char channel)
 {
 
+  // Initialise
+  _ticks = 0;
+  _previous = 0;
+
   _triggerPin = triggerPin;
   _directionPin = directionPin;
   _forward = true;
@@ -68,8 +72,8 @@ bool EncoderEvery::backward(){
 }
 
 unsigned long EncoderEvery::dt(){
-   return _dtavg.avg();
-   // return _dt;
+   //return _dtavg.avg();
+   return _dt;
 }
 
 unsigned long EncoderEvery::dtRaw(){
@@ -111,7 +115,7 @@ void EncoderEvery::_tick()
   unsigned long now = micros();
   _dt = now - _previous;
   _previous = now;
-  _dtavg.push(_dt);
+  //_dtavg.push(_dt);
      
 
 }
