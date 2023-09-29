@@ -78,15 +78,15 @@ void version(){
 
 void captureLog() {
 
-  if (olda != encoderA.read() | oldb != encoderB.read()) {
+  if (olda != encoderA.dt() | oldb != encoderB.dt()) {
 
     time_stamp[log_idx] = micros();
     a_log[log_idx] = encoderA.dt();
-    b_log[log_idx] = encoderA.dt();
+    b_log[log_idx] = encoderB.dt();
 
     log_idx++;
-    olda = encoderA.read();
-    oldb = encoderB.read();
+    olda = encoderA.dt();
+    oldb = encoderB.dt();
   }
 }
 
