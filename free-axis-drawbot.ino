@@ -91,9 +91,9 @@ void printLog() {
   Serial.println("a,b");
 
   for (unsigned int i = 0; i < BUFFER_SIZE; i++) {
-    Serial.print(encoderA.getEdgeHistory()[i]);
+    Serial.print(encoderA.getEdgeHistory().pop());
     Serial.print(",");
-    Serial.println(encoderB.getEdgeHistory()[i]);
+    Serial.println(encoderB.getEdgeHistory().pop());
    // Serial.print(",");
     //Serial.println(b_log[i]);
   }

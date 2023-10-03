@@ -4,7 +4,7 @@
 #include "RollingAverage.h"
 #include "CircularBuffer.h"
 
-#define BUFFER_SIZE 300
+#define BUFFER_SIZE 400
 
 enum class EncoderISRChannel
 {

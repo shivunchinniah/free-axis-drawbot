@@ -116,6 +116,9 @@ void EncoderEvery::_tick()
   _dt = now - _previous;
   _previous = now;
   //_dtavg.push(_dt);
+
+  // push timestamp to edge buffer
+  _edgeHistory.unshift(now);
      
 
 }
@@ -147,7 +150,7 @@ void EncoderEvery::_tick_90()
   _dtavg.push(_dt); 
 
   // push timestamp to edge buffer
-  _edgeHistory.push(now);
+  _edgeHistory.unshift(now);
 }
 
 bool EncoderEvery::isReversed()
