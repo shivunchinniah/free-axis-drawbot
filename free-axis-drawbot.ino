@@ -25,14 +25,14 @@ L298M motorB(MOTOR_B1, MOTOR_B2);
 
 // Arrays for data logging
 
-#define LOG_SIZE 400
 
-#define VERSION 1.2
+
+#define VERSION 1.3
 
 // 4 bytes per ulong
-unsigned long time_stamp[LOG_SIZE];
-unsigned long a_log[LOG_SIZE];
-unsigned long b_log[LOG_SIZE];
+// unsigned long time_stamp[LOG_SIZE];
+// unsigned long a_log[LOG_SIZE];
+// unsigned long b_log[LOG_SIZE];
 
 unsigned int log_idx = 0;
 bool logging = false;
@@ -60,14 +60,11 @@ void loop() {
   cmdPoll();
 
   if (logging) {
-    if(log_idx < LOG_SIZE) {
-      captureLog();
-    } else {
+    if(! (encoderA.getEdgeHistory().isFull() && encoderB.getEdgeHistory().isFull())) {
       logging = false;
-      log_idx = 0;
       printLog();
       stopMotors(0, nullptr); 
-    }
+    } 
     
   }
 }
@@ -76,28 +73,29 @@ void version(){
   Serial.println(VERSION);
 }
 
-void captureLog() {
+// void captureLog() {
 
-  if (olda != encoderA.dt() | oldb != encoderB.dt()) {
+//   if (olda != encoderA.dt() | oldb != encoderB.dt()) {
 
-    time_stamp[log_idx] = micros();
-    a_log[log_idx] = encoderA.dt();
-    b_log[log_idx] = encoderB.dt();
+//     time_stamp[log_idx] = micros();
+//     a_log[log_idx] = encoderA.dt();
+//     b_log[log_idx] = encoderB.dt();
 
-    log_idx++;
-    olda = encoderA.dt();
-    oldb = encoderB.dt();
-  }
-}
+//     log_idx++;
+//     olda = encoderA.dt();
+//     oldb = encoderB.dt();
+//   }
+// }
 
 void printLog() {
-  Serial.println("timestamp,a,b");
-  for (unsigned int i = 0; i < LOG_SIZE; i++) {
-    Serial.print(time_stamp[i]);
+  Serial.println("a,b");
+
+  for (unsigned int i = 0; i < BUFFER_SIZE; i++) {
+    Serial.print(encoderA.getEdgeHistory()[i]);
     Serial.print(",");
-    Serial.print(a_log[i]);
-    Serial.print(",");
-    Serial.println(b_log[i]);
+    Serial.println(encoderB.getEdgeHistory()[i]);
+   // Serial.print(",");
+    //Serial.println(b_log[i]);
   }
 }
 
@@ -147,6 +145,11 @@ void startLog(int argc, char **args) {
     motorB.setVector(String(args[1]).toInt());
     motorA.run();
     motorB.run();
+
+    // reset encoder edge history
+    encoderA.getEdgeHistory().clear();
+    encoderB.getEdgeHistory().clear();
+
     logging = true;
   } else {
     Serial.println("Invalid setpoint");

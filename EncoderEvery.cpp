@@ -145,6 +145,9 @@ void EncoderEvery::_tick_90()
   _dt = now - _previous;
   _previous = now;
   _dtavg.push(_dt); 
+
+  // push timestamp to edge buffer
+  _edgeHistory.push(now);
 }
 
 bool EncoderEvery::isReversed()
@@ -204,4 +207,9 @@ void EncoderEvery::ISRHandlerD_90()
 {
 
   EncoderEvery::ISR_D->_tick_90();
+}
+
+
+CircularBuffer<unsigned long, BUFFER_SIZE>& EncoderEvery::getEdgeHistory(){
+  return _edgeHistory;
 }

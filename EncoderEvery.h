@@ -2,6 +2,9 @@
 #define ENCODER_EVERY_H
 
 #include "RollingAverage.h"
+#include "CircularBuffer.h"
+
+#define BUFFER_SIZE 300
 
 enum class EncoderISRChannel
 {
@@ -15,6 +18,9 @@ class EncoderEvery
 {
 public:
     
+
+    
+
     unsigned long dt();
     unsigned long dtRaw();
     EncoderEvery(unsigned int triggerPin, unsigned int directionPin, char channel);
@@ -24,6 +30,8 @@ public:
     void setReversed(bool reverse);
     bool forward();
     bool backward();
+    
+    CircularBuffer<unsigned long, BUFFER_SIZE>& getEdgeHistory();
 
     static EncoderEvery *ISR_A;
     static EncoderEvery *ISR_B;
@@ -33,7 +41,7 @@ public:
 private:
 
       
-
+    CircularBuffer<unsigned long, BUFFER_SIZE> _edgeHistory; // Store the edge history (micros() intervals) in a FIFO buffer.
     bool _forward;
     long _ticks;
     void _tick();
