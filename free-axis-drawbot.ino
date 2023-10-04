@@ -60,7 +60,7 @@ void loop() {
   cmdPoll();
 
   if (logging) {
-    if(! (encoderA.getEdgeHistory().isFull() && encoderB.getEdgeHistory().isFull())) {
+    if(! (encoderA.history_idx < BUFFER_SIZE && encoderB.history_idx < BUFFER_SIZE)) {
       logging = false;
       printLog();
       stopMotors(0, nullptr); 
@@ -91,12 +91,13 @@ void printLog() {
   Serial.println("a,b");
 
   for (unsigned int i = 0; i < BUFFER_SIZE; i++) {
-    Serial.print(encoderA.getEdgeHistory().pop());
+    Serial.print(encoderA.history[i]);
     Serial.print(",");
-    Serial.println(encoderB.getEdgeHistory().pop());
+    Serial.println(encoderB.history[i]);
    // Serial.print(",");
     //Serial.println(b_log[i]);
   }
+
 }
 
 
@@ -146,9 +147,8 @@ void startLog(int argc, char **args) {
     motorA.run();
     motorB.run();
 
-    // reset encoder edge history
-    encoderA.getEdgeHistory().clear();
-    encoderB.getEdgeHistory().clear();
+    encoderA.history_idx = 0;
+    encoderB.history_idx = 0;
 
     logging = true;
   } else {

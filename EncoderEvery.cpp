@@ -118,7 +118,8 @@ void EncoderEvery::_tick()
   //_dtavg.push(_dt);
 
   // push timestamp to edge buffer
-  _edgeHistory.unshift(now);
+  if(history_idx < BUFFER_SIZE)
+    history[history_idx++] = now;
      
 
 }
@@ -147,10 +148,11 @@ void EncoderEvery::_tick_90()
   unsigned long now = micros();
   _dt = now - _previous;
   _previous = now;
-  _dtavg.push(_dt); 
+  //_dtavg.push(_dt); 
 
   // push timestamp to edge buffer
-  _edgeHistory.unshift(now);
+  if(history_idx < BUFFER_SIZE)
+    history[history_idx++] = now;
 }
 
 bool EncoderEvery::isReversed()
@@ -213,6 +215,3 @@ void EncoderEvery::ISRHandlerD_90()
 }
 
 
-CircularBuffer<unsigned long, BUFFER_SIZE>& EncoderEvery::getEdgeHistory(){
-  return _edgeHistory;
-}

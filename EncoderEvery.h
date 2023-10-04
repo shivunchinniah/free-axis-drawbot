@@ -31,7 +31,9 @@ public:
     bool forward();
     bool backward();
     
-    CircularBuffer<unsigned long, BUFFER_SIZE>& getEdgeHistory();
+    //CircularBuffer<unsigned long, BUFFER_SIZE>& getEdgeHistory();
+    unsigned long history[BUFFER_SIZE];
+    unsigned int history_idx = 0;
 
     static EncoderEvery *ISR_A;
     static EncoderEvery *ISR_B;
@@ -41,7 +43,7 @@ public:
 private:
 
       
-    CircularBuffer<unsigned long, BUFFER_SIZE> _edgeHistory; // Store the edge history (micros() intervals) in a FIFO buffer.
+   // CircularBuffer<unsigned long, BUFFER_SIZE> _edgeHistory; // Store the edge history (micros() intervals) in a FIFO buffer.
     bool _forward;
     long _ticks;
     void _tick();
