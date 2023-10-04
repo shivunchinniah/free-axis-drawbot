@@ -23,7 +23,7 @@ public:
 
     unsigned long dt();
     unsigned long dtRaw();
-    EncoderEvery(unsigned int triggerPin, unsigned int directionPin, char channel);
+    EncoderEvery(unsigned int triggerPin, unsigned int directionPin, char channel, unsigned int poles);
     long read();
     void write(long ticks);
     bool isReversed();

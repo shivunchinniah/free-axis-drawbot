@@ -6,12 +6,14 @@ EncoderEvery *EncoderEvery::ISR_B = nullptr;
 EncoderEvery *EncoderEvery::ISR_C = nullptr;
 EncoderEvery *EncoderEvery::ISR_D = nullptr;
 
-EncoderEvery::EncoderEvery(unsigned int triggerPin, unsigned int directionPin, char channel)
+EncoderEvery::EncoderEvery(unsigned int triggerPin, unsigned int directionPin, char channel, unsigned int poles)
 {
 
   // Initialise
   _ticks = 0;
   _previous = 0;
+
+  _dtavg = RollingAverage<unsigned long>(poles);
 
   _triggerPin = triggerPin;
   _directionPin = directionPin;
@@ -115,11 +117,11 @@ void EncoderEvery::_tick()
   unsigned long now = micros();
   _dt = now - _previous;
   _previous = now;
-  //_dtavg.push(_dt);
+  _dtavg.push(_dt);
 
   // push timestamp to edge buffer
   if(history_idx < BUFFER_SIZE)
-    history[history_idx++] = now;
+    history[history_idx++] = _dtavg.avg();
      
 
 }
@@ -148,11 +150,11 @@ void EncoderEvery::_tick_90()
   unsigned long now = micros();
   _dt = now - _previous;
   _previous = now;
-  //_dtavg.push(_dt); 
+  _dtavg.push(_dt); 
 
   // push timestamp to edge buffer
   if(history_idx < BUFFER_SIZE)
-    history[history_idx++] = now;
+    history[history_idx++] = _dtavg.avg();
 }
 
 bool EncoderEvery::isReversed()

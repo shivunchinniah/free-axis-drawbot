@@ -7,10 +7,14 @@ template<class T>
 class RollingAverage {
 public:
 
-  RollingAverage(uint8_t pow2) {
-    _n = 1 << pow2;
-    _pow2 = pow2;
-    _buffer = new T[_n];
+  RollingAverage(uint8_t len) {
+    _buffer = new T[len];
+    _n = len;
+    _idx=0;
+
+    for(unsigned int i = 0; i < len; i++){
+      _buffer[i] = 0;
+    }
   }
 
   ~RollingAverage(){
@@ -25,7 +29,7 @@ public:
   }
 
   T avg(){
-    return _sum >> _pow2;
+    return _sum / (T)_n;
   }
 
 
@@ -33,7 +37,6 @@ private:
   T *_buffer;
   uint8_t _idx;
   uint8_t _n;
-  uint8_t _pow2;
   T _sum = 0;
 
   void incrementIdx() {

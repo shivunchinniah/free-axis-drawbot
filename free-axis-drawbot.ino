@@ -17,10 +17,10 @@
 #define A_TICKS_ROT 2012
 #define B_TICKS_ROT 2680
 
-EncoderEvery encoderA(MOTOR_A_ENC_0, MOTOR_A_ENC_90, 'A');
+EncoderEvery encoderA(MOTOR_A_ENC_0, MOTOR_A_ENC_90, 'A', 12);
 L298M motorA(MOTOR_A1, MOTOR_A2);
 
-EncoderEvery encoderB(MOTOR_B_ENC_0, MOTOR_B_ENC_90, 'B');
+EncoderEvery encoderB(MOTOR_B_ENC_0, MOTOR_B_ENC_90, 'B', 16);
 L298M motorB(MOTOR_B1, MOTOR_B2);
 
 // Arrays for data logging
