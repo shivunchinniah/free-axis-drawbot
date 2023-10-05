@@ -6,11 +6,12 @@
 template<class T>
 class RollingAverage {
 public:
-
-  RollingAverage(uint8_t len) {
+  
+  RollingAverage<T>(uint8_t len) {
     _buffer = new T[len];
     _n = len;
     _idx=0;
+    _sum = 0;
 
     for(unsigned int i = 0; i < len; i++){
       _buffer[i] = 0;
@@ -37,7 +38,7 @@ private:
   T *_buffer;
   uint8_t _idx;
   uint8_t _n;
-  T _sum = 0;
+  T _sum;
 
   void incrementIdx() {
     if (++_idx >= _n) _idx = 0;

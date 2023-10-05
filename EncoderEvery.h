@@ -24,6 +24,7 @@ public:
     unsigned long dt();
     unsigned long dtRaw();
     EncoderEvery(unsigned int triggerPin, unsigned int directionPin, char channel, unsigned int poles);
+    ~EncoderEvery(){ delete _dtavg; };
     long read();
     void write(long ticks);
     bool isReversed();
@@ -52,7 +53,7 @@ private:
     unsigned int _directionPin;
     bool _reversed;
     unsigned long _previous;
-    RollingAverage<unsigned long> _dtavg = RollingAverage<unsigned long>(3);
+    RollingAverage<unsigned long>* _dtavg;
     unsigned long _dt;
 
     static void ISRHandlerA();
