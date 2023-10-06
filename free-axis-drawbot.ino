@@ -17,6 +17,23 @@
 #define A_TICKS_ROT 2012
 #define B_TICKS_ROT 2680
 
+// Rolling buffer for available cpu time
+cpuStats = RollingAverage<unsigned long>(200);
+unsigned long previous = micros();
+
+inline void updateStats(){
+  unsigned long now = micros();
+  cpuStats.push(previous - now);
+}
+
+void printStats(){
+  Serial.print(cpuStats.avg());
+  Seerial.print(" us, min: ");
+  Serial.print(cpuStats.min());
+  Seerial.print(" us, max: ");
+  Serial.println(cpuStats.max());
+}
+
 EncoderEvery encoderA(MOTOR_A_ENC_0, MOTOR_A_ENC_90, 'A', 12);
 L298M motorA(MOTOR_A1, MOTOR_A2);
 
@@ -54,6 +71,7 @@ void setup() {
   cmdAdd("sm", setMotors);
   cmdAdd("stop", stopMotors);
   cmdAdd("log", startLog);
+  cmdAdd("cpu", printStats);
 }
 
 void loop() {
@@ -67,6 +85,8 @@ void loop() {
     } 
     
   }
+
+  updateStats();
 }
 
 void version(){
