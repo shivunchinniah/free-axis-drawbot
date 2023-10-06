@@ -13,8 +13,9 @@ public:
     _idx=0;
     _sum = 0;
 
-    for(unsigned int i = 0; i < len; i++){
-      _buffer[i] = 0;
+    for(uint8_t i = 0; i < len; i++){
+      _buffer[_idx] = (T) 0;
+      incrementIdx();
     }
   }
 
