@@ -68,6 +68,14 @@ int main(){
     x.testbuffer->push(0);
     testresult(x.testbuffer->avg() == expected);
 
+    expected = (unsigned long) 8  / (unsigned long) 12;
+    newtest("Test fraction result in 0, e.g.: " + to_string(expected));
+    for(int i =0; i<12; i++){
+        x.testbuffer->push(0);
+    }
+    x.testbuffer->push(8);
+    testresult(x.testbuffer->avg() == expected);
+
 
 
     printstats();
