@@ -2,7 +2,6 @@
 #define ENCODER_EVERY_H
 
 #include "RollingAverage.h"
-#include "CircularBuffer.h"
 
 #define BUFFER_SIZE 50
 
