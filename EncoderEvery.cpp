@@ -11,7 +11,7 @@ EncoderEvery::EncoderEvery(unsigned int triggerPin, unsigned int directionPin, c
 
   // Initialise
   _ticks = 0;
-  _previous = 0;
+  _previous = micros(); // initialise to when object is createdss
 
   _dtavg = new RollingAverage<unsigned long>(poles);
 
@@ -74,8 +74,7 @@ bool EncoderEvery::backward(){
 }
 
 unsigned long EncoderEvery::dt(){
-   //return _dtavg.avg();
-   return _dt;
+   return _dtavg->avg();
 }
 
 unsigned long EncoderEvery::dtRaw(){
