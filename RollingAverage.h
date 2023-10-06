@@ -34,6 +34,37 @@ public:
     return _sum / (T)_n;
   }
 
+  T min(){
+    T min = _buffer[0];
+    for(uint8_t i = 1; i < _n; i++){
+      if(_buffer[i] < min)
+        min = _buffer[i];
+    }
+    return min;
+  }
+
+  T max(){
+    T max = _buffer[0];
+    for(uint8_t i = 1; i < _n; i++){
+      if(_buffer[i] > max)
+        max = _buffer[i];
+    }
+    return max;
+  }
+
+  void clear(){
+
+    _idx = 0;
+
+    for(uint8_t i = 0; i < _n; i++){
+      _buffer[_idx] = (T) 0;
+      incrementIdx();
+    }
+
+  }
+
+
+
 
 private:
   T *_buffer;

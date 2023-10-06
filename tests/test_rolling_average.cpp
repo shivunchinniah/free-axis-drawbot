@@ -68,6 +68,20 @@ int main(){
     x.testbuffer->push(0);
     testresult(x.testbuffer->avg() == expected);
 
+    newtest("Maximum");
+    testresult(x.testbuffer->max() == 123);
+    
+    newtest("Min");
+    testresult(x.testbuffer->min() == 0);
+
+    expected = (unsigned long) 8  / (unsigned long) 12;
+    newtest("Fraction result in 0, e.g.: " + to_string(expected));
+    for(int i =0; i<12; i++){
+        x.testbuffer->push(0);
+    }
+    x.testbuffer->push(8);
+    testresult(x.testbuffer->avg() == expected);
+
 
 
     printstats();

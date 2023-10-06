@@ -34,7 +34,16 @@
     "**/.vscode/**"
   ],
   "files.associations": {
-    "typeinfo": "cpp"
+    "typeinfo": "cpp",
+    "__hash_table": "cpp",
+    "__split_buffer": "cpp",
+    "atomic": "cpp",
+    "ios": "cpp",
+    "string": "cpp",
+    "system_error": "cpp",
+    "unordered_map": "cpp",
+    "vector": "cpp",
+    "*.tpp": "cpp"
   },
   "C_Cpp_Runner.msvcWarnings": [
     "/W4",
