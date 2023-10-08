@@ -18,7 +18,9 @@ class EncoderEvery
 public:
     
 
-    
+    /* Ticks Per Second */
+    unsigned long tps_period_method();
+    unsigned long tps_frequency_method();
 
     unsigned long dt();
     unsigned long dtRaw();
@@ -30,6 +32,8 @@ public:
     void setReversed(bool reverse);
     bool forward();
     bool backward();
+
+    void update_tps(unsigned long now);
     
     //CircularBuffer<unsigned long, BUFFER_SIZE>& getEdgeHistory();
     unsigned long history[BUFFER_SIZE];
@@ -54,6 +58,8 @@ private:
     unsigned long _previous;
     RollingAverage<unsigned long>* _dtavg;
     unsigned long _dt;
+
+    unsigned long _previous_time;
 
     static void ISRHandlerA();
     static void ISRHandlerB();

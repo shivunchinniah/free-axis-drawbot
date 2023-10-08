@@ -11,7 +11,7 @@ EncoderEvery::EncoderEvery(unsigned int triggerPin, unsigned int directionPin, c
 
   // Initialise
   _ticks = 0;
-  _previous = micros(); // initialise to when object is createdss
+  _previous = micros(); // initialise to when object is created
 
   _dtavg = new RollingAverage<unsigned long>(poles);
 
