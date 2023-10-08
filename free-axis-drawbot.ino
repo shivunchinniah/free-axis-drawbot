@@ -18,19 +18,20 @@
 #define B_TICKS_ROT 2680
 
 // Rolling buffer for available cpu time
-cpuStats = RollingAverage<unsigned long>(200);
+RollingAverage<unsigned long> cpuStats(128);
 unsigned long previous = micros();
 
 inline void updateStats(){
   unsigned long now = micros();
-  cpuStats.push(previous - now);
+  cpuStats.push(now - previous);
+  previous = now;
 }
 
 void printStats(){
   Serial.print(cpuStats.avg());
-  Seerial.print(" us, min: ");
+  Serial.print(" us, min: ");
   Serial.print(cpuStats.min());
-  Seerial.print(" us, max: ");
+  Serial.print(" us, max: ");
   Serial.println(cpuStats.max());
 }
 

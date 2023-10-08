@@ -43,7 +43,10 @@
     "system_error": "cpp",
     "unordered_map": "cpp",
     "vector": "cpp",
-    "*.tpp": "cpp"
+    "*.tpp": "cpp",
+    "random": "cpp",
+    "limits": "cpp",
+    "ranges": "cpp"
   },
   "C_Cpp_Runner.msvcWarnings": [
     "/W4",
