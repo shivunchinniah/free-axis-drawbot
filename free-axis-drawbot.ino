@@ -29,11 +29,30 @@ inline void updateStats(){
 }
 
 void printStats(){
+
+  // Loop budget 20MHz --> 0.05 micro seconds per instruction
+  // Motor max rpm is 33 @ 6V and 66rpm @ 12V however there is 171:1 reduction
+  // = maximum rotations per second = 171 * 66 / 60 = 188.1 rps
+  // = maximum ticks per second = 188.1 * 16 = 3009.6 tps thus maximum overvable frequency is 3kHz
+  // We will probably have to use 16 tick samples to get smoothend measurement thus 188.1 becomes the maximium observable frequency
+  // thus we aim to have a enough power to have a 200Hz loop frequency
+  // that is 5ms loop period
+
+  // Compute number of free instructions
+  
+  const unsigned long max_instructions = 100000; // 5ms / (1/20MHz)
+  const unsigned long available_microseconds = 5000; // 5 ms in a u_seconds
+
   Serial.print(cpuStats.avg());
   Serial.print(" us, min: ");
   Serial.print(cpuStats.min());
   Serial.print(" us, max: ");
   Serial.println(cpuStats.max());
+  
+  Serial.print(cpuStats.avg() / available_microseconds);
+  Serial.println("% used for 5ms loop time.");
+
+
 }
 
 EncoderEvery encoderA(MOTOR_A_ENC_0, MOTOR_A_ENC_90, 'A', 12);
