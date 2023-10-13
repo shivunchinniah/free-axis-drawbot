@@ -14,8 +14,9 @@
 #define MOTOR_B_ENC_0 8
 #define MOTOR_B_ENC_90 3
 
-#define A_TICKS_ROT 2012
-#define B_TICKS_ROT 2680
+
+#define A_TICKS_ROT 2058 // 12 * 171
+#define B_TICKS_ROT 2736 // 16 * 171
 
 // Rolling buffer for available cpu time
 RollingAverage<unsigned long> cpuStats(128);
@@ -41,24 +42,8 @@ L298M motorA(MOTOR_A1, MOTOR_A2);
 EncoderEvery encoderB(MOTOR_B_ENC_0, MOTOR_B_ENC_90, 'B', 16);
 L298M motorB(MOTOR_B1, MOTOR_B2);
 
-// Arrays for data logging
+#define VERSION 1.4
 
-
-
-#define VERSION 1.3
-
-// 4 bytes per ulong
-// unsigned long time_stamp[LOG_SIZE];
-// unsigned long a_log[LOG_SIZE];
-// unsigned long b_log[LOG_SIZE];
-
-unsigned int log_idx = 0;
-bool logging = false;
-
-long olda = 0;
-long oldb = 0;
-
-// 12 bytes per data entry
 
 
 void setup() {
@@ -71,54 +56,16 @@ void setup() {
   cmdAdd("rs", resetEncoders);
   cmdAdd("sm", setMotors);
   cmdAdd("stop", stopMotors);
-  cmdAdd("log", startLog);
   cmdAdd("cpu", printStats);
 }
 
 void loop() {
   cmdPoll();
-
-  if (logging) {
-    if(! (encoderA.history_idx < BUFFER_SIZE && encoderB.history_idx < BUFFER_SIZE)) {
-      logging = false;
-      printLog();
-      stopMotors(0, nullptr); 
-    } 
-    
-  }
-
   updateStats();
 }
 
 void version(){
   Serial.println(VERSION);
-}
-
-// void captureLog() {
-
-//   if (olda != encoderA.dt() | oldb != encoderB.dt()) {
-
-//     time_stamp[log_idx] = micros();
-//     a_log[log_idx] = encoderA.dt();
-//     b_log[log_idx] = encoderB.dt();
-
-//     log_idx++;
-//     olda = encoderA.dt();
-//     oldb = encoderB.dt();
-//   }
-// }
-
-void printLog() {
-  Serial.println("a,b");
-
-  for (unsigned int i = 0; i < BUFFER_SIZE; i++) {
-    Serial.print(encoderA.history[i]);
-    Serial.print(",");
-    Serial.println(encoderB.history[i]);
-   // Serial.print(",");
-    //Serial.println(b_log[i]);
-  }
-
 }
 
 
@@ -161,21 +108,7 @@ void readEncoders(int argc, char **args) {
   printlnMatrix(encoderA.read(), encoderB.read());
 }
 
-void startLog(int argc, char **args) {
-  if (argc >= 2) {
-    motorA.setVector(String(args[1]).toInt());
-    motorB.setVector(String(args[1]).toInt());
-    motorA.run();
-    motorB.run();
 
-    encoderA.history_idx = 0;
-    encoderB.history_idx = 0;
-
-    logging = true;
-  } else {
-    Serial.println("Invalid setpoint");
-  }
-}
 
 template<typename T>
 void printlnMatrix(T a, T b) {
@@ -196,37 +129,3 @@ double rawToRotB(long raw) {
 }
 
 
-
-// // Print "hello world" when called from the command line.
-// //
-// // Usage:
-// // hello
-// void hello(int arg_cnt, char **args)
-// {
-//   Serial.println("Hello world.");
-// }
-
-// // Display the contents of the args string array.
-// //
-// // Usage:
-// // args 12 34 56 hello gothic baby
-// //
-// // Will display the contents of the args array as a list of strings
-// // Output:
-// // Arg 0: args
-// // Arg 1: 12
-// // Arg 2: 34
-// // Arg 3: 56
-// // Arg 4: hello
-// // Arg 5: gothic
-// // Arg 6: baby
-// void arg_display(int arg_cnt, char **args)
-// {
-//   for (int i=0; i<arg_cnt; i++)
-//   {
-//     Serial.print("Arg ");
-//     Serial.print(i);
-//     Serial.print(": ");
-//     Serial.println(args[i]);
-//   }
-// }

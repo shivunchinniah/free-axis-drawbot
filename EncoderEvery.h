@@ -16,16 +16,9 @@ enum class EncoderISRChannel
 class EncoderEvery
 {
 public:
-    
 
-    /* Ticks Per Second */
-    unsigned long tps_period_method();
-    unsigned long tps_frequency_method();
-
-    unsigned long dt();
-    unsigned long dtRaw();
     EncoderEvery(unsigned int triggerPin, unsigned int directionPin, char channel, unsigned int poles);
-    ~EncoderEvery(){ delete _dtavg; };
+    ~EncoderEvery(){ };
     long read();
     void write(long ticks);
     bool isReversed();
@@ -35,10 +28,18 @@ public:
 
     void update_tps(unsigned long now);
     
-    //CircularBuffer<unsigned long, BUFFER_SIZE>& getEdgeHistory();
-    unsigned long history[BUFFER_SIZE];
-    unsigned int history_idx = 0;
+    // ---- Speed Measurement ----
 
+    // Updates the current speed measurement, requries current timestamp and aproximate sample time
+    // This function is called within a control loop whith assumed constant time sampling
+    void updateSpeed(unsigned long& now, unsigned long& ts); 
+    
+    unsigned long rps(); // speed in rotations per second
+    unsigned long rpm(); // speed in rpm
+
+
+
+    // ISR Pointers for 4 channels
     static EncoderEvery *ISR_A;
     static EncoderEvery *ISR_B;
     static EncoderEvery *ISR_C;
@@ -46,21 +47,31 @@ public:
 
 private:
 
-      
-   // CircularBuffer<unsigned long, BUFFER_SIZE> _edgeHistory; // Store the edge history (micros() intervals) in a FIFO buffer.
+    unsigned int _tpr; // ticks per rotation
+
+    // Speed measurement
+    //unsigned long _ts; // sample time for speed measurement 
+    unsigned long _ts_ticks; // ticks in current speed measurement
+    unsigned long _previous_time; // timestamp of last tick
+
+    unsigned long _rps; // Rotations Per Second
+
+    // Position measurement
     bool _forward;
     long _ticks;
+
+
+    // Interrupt handling
     void _tick();
     void _tick_90();
+
+    // Pin Setup
     unsigned int _triggerPin;
     unsigned int _directionPin;
     bool _reversed;
-    unsigned long _previous;
-    RollingAverage<unsigned long>* _dtavg;
-    unsigned long _dt;
 
-    unsigned long _previous_time;
 
+    // ISR Handlers for 4 channels, 0 degree and 90 degree 
     static void ISRHandlerA();
     static void ISRHandlerB();
     static void ISRHandlerC();

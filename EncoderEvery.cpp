@@ -11,14 +11,16 @@ EncoderEvery::EncoderEvery(unsigned int triggerPin, unsigned int directionPin, c
 
   // Initialise
   _ticks = 0;
-  _previous = micros(); // initialise to when object is created
+  _previous_time = micros(); // initialise to when object is created
 
-  _dtavg = new RollingAverage<unsigned long>(poles);
+  _tpr = poles;
+
+
 
   _triggerPin = triggerPin;
   _directionPin = directionPin;
   _forward = true;
-  _previous = micros();
+  _previous_time = micros();
 
   void (*ISRHandler)() = nullptr;
   void (*ISRHandler_90)() = nullptr;
@@ -73,13 +75,6 @@ bool EncoderEvery::backward(){
   return !_forward;
 }
 
-unsigned long EncoderEvery::dt(){
-   return _dtavg->avg();
-}
-
-unsigned long EncoderEvery::dtRaw(){
-  return _dt;
-}
 
 long EncoderEvery::read()
 {
@@ -112,17 +107,9 @@ void EncoderEvery::_tick()
     _forward = false;
   }
 
-  // update dt
-  unsigned long now = micros();
-  _dt = now - _previous;
-  _previous = now;
-  _dtavg->push(_dt);
-
-  // push timestamp to edge buffer
-  if(history_idx < BUFFER_SIZE)
-    history[history_idx++] = _dtavg->avg();
-     
-
+  // update last tick time
+  _previous_time = micros();
+  _ts_ticks++;
 }
 
 void EncoderEvery::_tick_90()
@@ -145,15 +132,9 @@ void EncoderEvery::_tick_90()
     _forward = false;
   }
 
-  // update dt
-  unsigned long now = micros();
-  _dt = now - _previous;
-  _previous = now;
-  _dtavg->push(_dt); 
-
-  // push timestamp to edge buffer
-  if(history_idx < BUFFER_SIZE)
-    history[history_idx++] = _dtavg->avg();
+  // update last tick time
+  _previous_time = micros();
+  _ts_ticks++;
 }
 
 bool EncoderEvery::isReversed()
@@ -213,6 +194,23 @@ void EncoderEvery::ISRHandlerD_90()
 {
 
   EncoderEvery::ISR_D->_tick_90();
+}
+
+void EncoderEvery::updateSpeed(unsigned long& now, unsigned long& ts)
+{
+
+  _rps = (_ts_ticks * 1000000ul) / ( (ts + (now - _previous_time)) * _tpr);
+  _ts_ticks = 0;
+
+}
+
+unsigned long EncoderEvery::rpm()
+{
+  return 60ul * _rps;
+}
+
+unsigned long EncoderEvery::rps(){
+  return _rps;
 }
 
 
