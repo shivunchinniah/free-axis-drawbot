@@ -53,6 +53,7 @@ private:
     //unsigned long _ts; // sample time for speed measurement 
     unsigned long _ts_ticks; // ticks in current speed measurement
     unsigned long _previous_time; // timestamp of last tick
+    unsigned long _previous_sample_delta; // the timestamp of the last tick in the previous
 
     unsigned long _rps; // Rotations Per Second
 

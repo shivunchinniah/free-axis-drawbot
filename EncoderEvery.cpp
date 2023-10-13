@@ -16,7 +16,7 @@ EncoderEvery::EncoderEvery(unsigned int triggerPin, unsigned int directionPin, c
   _tpr = poles;
 
 
-
+  _previous_sample_delta = 0;
   _triggerPin = triggerPin;
   _directionPin = directionPin;
   _forward = true;
@@ -196,10 +196,16 @@ void EncoderEvery::ISRHandlerD_90()
   EncoderEvery::ISR_D->_tick_90();
 }
 
+
+
+//.----|    .     .     . |
+//  ^--- this is previous time delta
 void EncoderEvery::updateSpeed(unsigned long& now, unsigned long& ts)
 {
 
-  _rps = (_ts_ticks * 1000000ul) / ( (ts + (now - _previous_time)) * _tpr);
+  _rps = (_ts_ticks * 1000000ul) / ( (ts + _previous_sample_delta) * _tpr);
+
+  _previous_sample_delta = now - _previous_time;
   _ts_ticks = 0;
 
 }
