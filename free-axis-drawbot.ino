@@ -105,7 +105,10 @@ void setup() {
   cmdAdd("stop", stopMotors);
   cmdAdd("cpu", printStats);
 
-  cmdAdd("getspeed", getspeed);
+  cmdAdd("gs", getspeed);
+
+  cmdAdd("bs", startstream);
+  cmdAdd("es", stopstream);
 
 }
 
@@ -113,6 +116,8 @@ void setup() {
 unsigned long previous_200Hz = micros();
 
 const unsigned long ts = 5000ul; // 5000 microseconds = 5 ms
+
+bool streaming = false;
 
 void loop() {
 
@@ -122,6 +127,12 @@ void loop() {
     encoderB.updateSpeed(now, ts);
 
     updateSpeedStats();
+
+    if(streaming){
+      streamspeed(now);
+    }
+
+    previous_200Hz = now;
   }
 
   cmdPoll();
@@ -130,6 +141,25 @@ void loop() {
 
 void version(){
   Serial.println(VERSION);
+}
+
+void streamspeed(unsigned long now){
+  Serial.print(now);
+  Serial.print(",");
+  Serial.print(encoderA.rpm());
+  Serial.print(",");
+  Serial.println(encoderB.rpm());
+  
+}
+
+void stopstream(){
+  streaming = false;
+  output_buffer = true;
+}
+
+void startstream(){
+  streaming = true;
+  output_buffer = false;
 }
 
 

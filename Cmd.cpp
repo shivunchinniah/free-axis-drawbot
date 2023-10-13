@@ -157,7 +157,9 @@ void cmd_handler()
     
     default:
         // normal character entered. add it to the buffer
-        Serial.print(c);
+        
+        if(output_buffer)
+            Serial.print(c);
         *msg_ptr++ = c;
         break;
     }

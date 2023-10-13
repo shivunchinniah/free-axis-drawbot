@@ -16,6 +16,8 @@ EncoderEvery::EncoderEvery(unsigned int triggerPin, unsigned int directionPin, c
 
   _tpr = poles;
 
+  _rpm_avg = new RollingAverage<unsigned long>(poles);
+
 
 
   _triggerPin = triggerPin;

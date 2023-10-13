@@ -18,7 +18,7 @@ class EncoderEvery
 public:
 
     EncoderEvery(unsigned int triggerPin, unsigned int directionPin, char channel, unsigned int poles);
-    ~EncoderEvery(){ };
+    ~EncoderEvery(){ delete _rpm_avg; };
     long read();
     void write(long ticks);
     bool isReversed();
@@ -56,6 +56,8 @@ private:
 
     unsigned long _rps; // Rotations Per Second
     unsigned long _rpm; // rotations per minute
+
+    RollingAverage<unsigned long>* _rpm_avg;
 
     // Position measurement
     bool _forward;
