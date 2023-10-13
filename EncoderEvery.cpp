@@ -11,6 +11,7 @@ EncoderEvery::EncoderEvery(unsigned int triggerPin, unsigned int directionPin, c
 
   // Initialise
   _ticks = 0;
+  _ts_ticks = 0;
   _previous_time = micros(); // initialise to when object is created
 
   _tpr = poles;
@@ -196,21 +197,22 @@ void EncoderEvery::ISRHandlerD_90()
   EncoderEvery::ISR_D->_tick_90();
 }
 
-void EncoderEvery::updateSpeed(unsigned long& now, unsigned long& ts)
+void EncoderEvery::updateSpeed(unsigned long& now, const unsigned long& ts)
 {
 
-  _rps = (_ts_ticks * 1000000ul) / ( (ts + (now - _previous_time)) * _tpr);
+  _rpm = (_ts_ticks * 60000000ul) / ( (ts + (now - _previous_time)) * _tpr);
   _ts_ticks = 0;
 
 }
 
 unsigned long EncoderEvery::rpm()
 {
-  return 60ul * _rps;
+  return _rpm;
 }
 
-unsigned long EncoderEvery::rps(){
-  return _rps;
+float EncoderEvery::rps(){
+  //return _rps;
+  return (float) _rpm / 60.0f;
 }
 
 

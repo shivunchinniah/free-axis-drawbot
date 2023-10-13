@@ -22,11 +22,17 @@
 RollingAverage<unsigned long> cpuStats(128);
 unsigned long previous = micros();
 
+// Rolling buffer for speed
+RollingAverage<float> speedStatsA(128);
+RollingAverage<float> speedStatsB(128);
+unsigned long previous_speed_time = micros();
+
 inline void updateStats(){
   unsigned long now = micros();
   cpuStats.push(now - previous);
   previous = now;
 }
+
 
 void printStats(){
 
@@ -49,10 +55,8 @@ void printStats(){
   Serial.print(" us, max: ");
   Serial.println(cpuStats.max());
   
-  Serial.print(cpuStats.avg() / available_microseconds);
+  Serial.print(cpuStats.avg() * 100ul / available_microseconds);
   Serial.println("% used for 5ms loop time.");
-
-
 }
 
 EncoderEvery encoderA(MOTOR_A_ENC_0, MOTOR_A_ENC_90, 'A', 12);
@@ -62,6 +66,30 @@ EncoderEvery encoderB(MOTOR_B_ENC_0, MOTOR_B_ENC_90, 'B', 16);
 L298M motorB(MOTOR_B1, MOTOR_B2);
 
 #define VERSION 1.4
+
+
+inline void updateSpeedStats(){
+  unsigned long now = micros();
+  
+  // push every 5ms or 200Hz
+  //if(now - previous_speed_time >= 5000){
+    speedStatsA.push(encoderA.rps());
+    speedStatsB.push(encoderB.rps());
+    previous_speed_time = now;
+  //}
+
+}
+
+void getspeed(){
+  Serial.println(micros());
+  Serial.println("Rotations per second:");
+  Serial.print("Mean:\t");
+  printlnMatrix(speedStatsA.avg(), speedStatsB.avg());
+  Serial.print("Min:\t");
+  printlnMatrix(speedStatsA.min(), speedStatsB.min());
+  Serial.print("Max:\t");
+  printlnMatrix(speedStatsA.max(), speedStatsB.max());
+}
 
 
 
@@ -76,9 +104,26 @@ void setup() {
   cmdAdd("sm", setMotors);
   cmdAdd("stop", stopMotors);
   cmdAdd("cpu", printStats);
+
+  cmdAdd("getspeed", getspeed);
+
 }
 
+
+unsigned long previous_200Hz = micros();
+
+const unsigned long ts = 5000ul; // 5000 microseconds = 5 ms
+
 void loop() {
+
+  unsigned long now = micros();
+  if(now - previous_200Hz >= ts){
+    encoderA.updateSpeed(now, ts);
+    encoderB.updateSpeed(now, ts);
+
+    updateSpeedStats();
+  }
+
   cmdPoll();
   updateStats();
 }

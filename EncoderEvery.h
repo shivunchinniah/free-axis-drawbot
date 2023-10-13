@@ -32,9 +32,9 @@ public:
 
     // Updates the current speed measurement, requries current timestamp and aproximate sample time
     // This function is called within a control loop whith assumed constant time sampling
-    void updateSpeed(unsigned long& now, unsigned long& ts); 
+    void updateSpeed(unsigned long& now, const unsigned long& ts); 
     
-    unsigned long rps(); // speed in rotations per second
+    float rps(); // speed in rotations per second
     unsigned long rpm(); // speed in rpm
 
 
@@ -55,6 +55,7 @@ private:
     unsigned long _previous_time; // timestamp of last tick
 
     unsigned long _rps; // Rotations Per Second
+    unsigned long _rpm; // rotations per minute
 
     // Position measurement
     bool _forward;
