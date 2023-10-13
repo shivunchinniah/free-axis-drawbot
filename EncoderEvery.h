@@ -18,7 +18,7 @@ class EncoderEvery
 public:
 
     EncoderEvery(unsigned int triggerPin, unsigned int directionPin, char channel, unsigned int poles);
-    ~EncoderEvery(){ };
+    ~EncoderEvery(){ delete _rpm_avg; };
     long read();
     void write(long ticks);
     bool isReversed();
@@ -32,9 +32,9 @@ public:
 
     // Updates the current speed measurement, requries current timestamp and aproximate sample time
     // This function is called within a control loop whith assumed constant time sampling
-    void updateSpeed(unsigned long& now, unsigned long& ts); 
+    void updateSpeed(unsigned long& now, const unsigned long& ts); 
     
-    unsigned long rps(); // speed in rotations per second
+    float rps(); // speed in rotations per second
     unsigned long rpm(); // speed in rpm
 
 
@@ -56,6 +56,9 @@ private:
     unsigned long _previous_sample_delta; // the timestamp of the last tick in the previous
 
     unsigned long _rps; // Rotations Per Second
+    unsigned long _rpm; // rotations per minute
+
+    RollingAverage<unsigned long>* _rpm_avg;
 
     // Position measurement
     bool _forward;

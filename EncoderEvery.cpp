@@ -11,9 +11,12 @@ EncoderEvery::EncoderEvery(unsigned int triggerPin, unsigned int directionPin, c
 
   // Initialise
   _ticks = 0;
+  _ts_ticks = 0;
   _previous_time = micros(); // initialise to when object is created
 
   _tpr = poles;
+
+  _rpm_avg = new RollingAverage<unsigned long>(poles);
 
 
   _previous_sample_delta = 0;
@@ -212,11 +215,12 @@ void EncoderEvery::updateSpeed(unsigned long& now, unsigned long& ts)
 
 unsigned long EncoderEvery::rpm()
 {
-  return 60ul * _rps;
+  return _rpm;
 }
 
-unsigned long EncoderEvery::rps(){
-  return _rps;
+float EncoderEvery::rps(){
+  //return _rps;
+  return (float) _rpm / 60.0f;
 }
 
 
