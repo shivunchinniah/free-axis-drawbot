@@ -82,6 +82,20 @@ int main(){
     x.testbuffer->push(8);
     testresult(x.testbuffer->avg() == expected);
 
+    
+    x.testbuffer->push(9);
+    for(int i =0; i<12; i++){
+        x.testbuffer->push(i);
+    }
+    
+    for(int i =0; i<12; i++){
+        newtest("get @" + to_string(i) + " is " + to_string(i));
+        testresult(x.testbuffer->get(i) == i);
+    
+    }
+
+    
+
 
 
     printstats();

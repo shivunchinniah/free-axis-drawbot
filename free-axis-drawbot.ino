@@ -27,6 +27,10 @@ RollingAverage<float> speedStatsA(128);
 RollingAverage<float> speedStatsB(128);
 unsigned long previous_speed_time = micros();
 
+
+// loop sample time target
+const unsigned long ts = 5000ul; // 5000 microseconds = 5 ms
+
 inline void updateStats(){
   unsigned long now = micros();
   cpuStats.push(now - previous);
@@ -47,7 +51,7 @@ void printStats(){
   // Compute number of free instructions
   
   const unsigned long max_instructions = 100000; // 5ms / (1/20MHz)
-  const unsigned long available_microseconds = 5000; // 5 ms in a u_seconds
+  //const unsigned long available_microseconds = 1000; // 5 ms in a u_seconds
 
   Serial.print(cpuStats.avg());
   Serial.print(" us, min: ");
@@ -55,8 +59,10 @@ void printStats(){
   Serial.print(" us, max: ");
   Serial.println(cpuStats.max());
   
-  Serial.print(cpuStats.avg() * 100ul / available_microseconds);
-  Serial.println("% used for 5ms loop time.");
+  Serial.print(cpuStats.avg() * 100ul / ts);
+  Serial.print("% used for ");
+  Serial.print(ts);
+  Serial.println("us loop time.");
 }
 
 EncoderEvery encoderA(MOTOR_A_ENC_0, MOTOR_A_ENC_90, 'A', 12);
@@ -115,7 +121,7 @@ void setup() {
 
 unsigned long previous_200Hz = micros();
 
-const unsigned long ts = 5000ul; // 5000 microseconds = 5 ms
+
 
 bool streaming = false;
 

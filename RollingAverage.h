@@ -60,7 +60,10 @@ public:
       _buffer[_idx] = (T) 0;
       incrementIdx();
     }
+  }
 
+  T &get(uint8_t i){
+    return _buffer[(_idx + i) % _n];
   }
 
 

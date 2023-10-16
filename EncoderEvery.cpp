@@ -1,5 +1,5 @@
-#include "EncoderEvery.h"
 #include "Arduino.h"
+#include "EncoderEvery.h"
 
 EncoderEvery *EncoderEvery::ISR_A = nullptr;
 EncoderEvery *EncoderEvery::ISR_B = nullptr;
@@ -13,17 +13,17 @@ EncoderEvery::EncoderEvery(unsigned int triggerPin, unsigned int directionPin, c
   _ticks = 0;
   _ts_ticks = 0;
   _previous_time = micros(); // initialise to when object is created
+  _previous_time_previous = micros();
 
   _tpr = poles;
 
-  _rpm_avg = new RollingAverage<unsigned long>(poles);
+  _dt_avg = new RollingAverage<unsigned long>(poles);
 
 
   _previous_sample_delta = 0;
   _triggerPin = triggerPin;
   _directionPin = directionPin;
   _forward = true;
-  _previous_time = micros();
 
   void (*ISRHandler)() = nullptr;
   void (*ISRHandler_90)() = nullptr;
@@ -111,7 +111,9 @@ void EncoderEvery::_tick()
   }
 
   // update last tick time
+  _previous_time_previous = _previous_time;
   _previous_time = micros();
+  _dt_avg->push(_previous_time - _previous_time_previous);
   _ts_ticks++;
 }
 
@@ -136,7 +138,9 @@ void EncoderEvery::_tick_90()
   }
 
   // update last tick time
+  _previous_time_previous = _previous_time;
   _previous_time = micros();
+  _dt_avg->push(_previous_time - _previous_time_previous);
   _ts_ticks++;
 }
 
@@ -201,14 +205,17 @@ void EncoderEvery::ISRHandlerD_90()
 
 
 
-//.----|    .     .     . |
-//  ^--- this is previous time delta
-void EncoderEvery::updateSpeed(unsigned long& now, unsigned long& ts)
+//.----|    .     .     .    .    .    .    .---|
+//  ^--- this is previous time delta           ^-- curent delta
+void EncoderEvery::updateSpeed(unsigned long& now, const unsigned long& ts)
 {
-
-  _rps = (_ts_ticks * 1000000ul) / ( (ts + _previous_sample_delta) * _tpr);
-
-  _previous_sample_delta = now - _previous_time;
+  // 60 mill useconds in 60 seconds
+  //unsigned long sample_delta = now - _previous_time;
+  unsigned long sample_delta = now - estimate_previous_time_using_dt_avg();
+  _rpm = (_ts_ticks * 60000000ul) / ( (ts + _previous_sample_delta - sample_delta) * _tpr);
+  
+  _previous_sample_delta = sample_delta;
+  
   _ts_ticks = 0;
 
 }
@@ -221,6 +228,18 @@ unsigned long EncoderEvery::rpm()
 float EncoderEvery::rps(){
   //return _rps;
   return (float) _rpm / 60.0f;
+}
+
+unsigned long EncoderEvery::estimate_previous_time_using_dt_avg(){
+
+  unsigned long sum = 0;
+
+  for(unsigned int idx = 0; idx < _tpr ; idx++){
+    sum += _dt_avg->get(idx) * (idx +1);
+  }
+
+  return _previous_time - (sum / (_tpr+1)) + ( _dt_avg->avg() *  (_tpr / 2));
+
 }
 
 
