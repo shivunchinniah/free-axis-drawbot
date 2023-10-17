@@ -28,6 +28,8 @@ RollingAverage<float> speedStatsB(128);
 unsigned long previous_speed_time = micros();
 
 
+
+
 // loop sample time target
 const unsigned long ts = 5000ul; // 5000 microseconds = 5 ms
 
@@ -50,7 +52,7 @@ void printStats(){
 
   // Compute number of free instructions
   
-  const unsigned long max_instructions = 100000; // 5ms / (1/20MHz)
+
   //const unsigned long available_microseconds = 1000; // 5 ms in a u_seconds
 
   Serial.print(cpuStats.avg());
@@ -71,7 +73,7 @@ L298M motorA(MOTOR_A1, MOTOR_A2);
 EncoderEvery encoderB(MOTOR_B_ENC_0, MOTOR_B_ENC_90, 'B', 16);
 L298M motorB(MOTOR_B1, MOTOR_B2);
 
-#define VERSION 1.4
+#define VERSION 1.5
 
 
 inline void updateSpeedStats(){
@@ -79,8 +81,8 @@ inline void updateSpeedStats(){
   
   // push every 5ms or 200Hz
   //if(now - previous_speed_time >= 5000){
-    speedStatsA.push(encoderA.rps());
-    speedStatsB.push(encoderB.rps());
+    speedStatsA.push(encoderA.rpm());
+    speedStatsB.push(encoderB.rpm());
     previous_speed_time = now;
   //}
 
@@ -128,9 +130,11 @@ bool streaming = false;
 void loop() {
 
   unsigned long now = micros();
+
+  unsigned long actual_ts = now - previous_200Hz;
   if(now - previous_200Hz >= ts){
-    encoderA.updateSpeed(now, ts);
-    encoderB.updateSpeed(now, ts);
+    encoderA.updateSpeed(now, actual_ts);
+    encoderB.updateSpeed(now, actual_ts);
 
     updateSpeedStats();
 
@@ -150,8 +154,11 @@ void version(){
 }
 
 void streamspeed(unsigned long now){
-  Serial.print(now);
-  Serial.print(",");
+  
+  // Serial.print(encoderA.rpm_dt());
+  // Serial.print(",");
+  // Serial.print(encoderB.rpm_dt());
+  // Serial.print(",");
   Serial.print(encoderA.rpm());
   Serial.print(",");
   Serial.println(encoderB.rpm());
