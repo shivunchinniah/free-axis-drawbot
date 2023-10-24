@@ -6,11 +6,17 @@
 template<class T>
 class RollingAverage {
 public:
+  
+  RollingAverage<T>(uint8_t len) {
+    _buffer = new T[len];
+    _n = len;
+    _idx=0;
+    _sum = 0;
 
-  RollingAverage(uint8_t pow2) {
-    _n = 1 << pow2;
-    _pow2 = pow2;
-    _buffer = new T[_n];
+    for(uint8_t i = 0; i < len; i++){
+      _buffer[_idx] = (T) 0;
+      incrementIdx();
+    }
   }
 
   ~RollingAverage(){
@@ -25,16 +31,49 @@ public:
   }
 
   T avg(){
-    return _sum >> _pow2;
+    return _sum / (T)_n;
   }
+
+  T min(){
+    T min = _buffer[0];
+    for(uint8_t i = 1; i < _n; i++){
+      if(_buffer[i] < min)
+        min = _buffer[i];
+    }
+    return min;
+  }
+
+  T max(){
+    T max = _buffer[0];
+    for(uint8_t i = 1; i < _n; i++){
+      if(_buffer[i] > max)
+        max = _buffer[i];
+    }
+    return max;
+  }
+
+  void clear(){
+
+    _idx = 0;
+
+    for(uint8_t i = 0; i < _n; i++){
+      _buffer[_idx] = (T) 0;
+      incrementIdx();
+    }
+  }
+
+  T &get(uint8_t i){
+    return _buffer[(_idx + i) % _n];
+  }
+
+
 
 
 private:
   T *_buffer;
   uint8_t _idx;
   uint8_t _n;
-  uint8_t _pow2;
-  T _sum = 0;
+  T _sum;
 
   void incrementIdx() {
     if (++_idx >= _n) _idx = 0;

@@ -1,18 +1,29 @@
-#include "EncoderEvery.h"
 #include "Arduino.h"
+#include "EncoderEvery.h"
 
 EncoderEvery *EncoderEvery::ISR_A = nullptr;
 EncoderEvery *EncoderEvery::ISR_B = nullptr;
 EncoderEvery *EncoderEvery::ISR_C = nullptr;
 EncoderEvery *EncoderEvery::ISR_D = nullptr;
 
-EncoderEvery::EncoderEvery(unsigned int triggerPin, unsigned int directionPin, char channel)
+EncoderEvery::EncoderEvery(unsigned int triggerPin, unsigned int directionPin, char channel, unsigned int poles)
 {
 
+  // Initialise
+  _ticks = 0;
+  _ts_ticks = 0;
+  _previous_time = micros(); // initialise to when object is created
+  _previous_time_previous = micros();
+
+  _tpr = poles;
+
+  _dt_avg = new RollingAverage<unsigned long>(poles);
+
+
+  _previous_sample_delta = 0;
   _triggerPin = triggerPin;
   _directionPin = directionPin;
   _forward = true;
-  _previous = micros();
 
   void (*ISRHandler)() = nullptr;
   void (*ISRHandler_90)() = nullptr;
@@ -67,14 +78,6 @@ bool EncoderEvery::backward(){
   return !_forward;
 }
 
-unsigned long EncoderEvery::dt(){
-   return _dtavg.avg();
-   // return _dt;
-}
-
-unsigned long EncoderEvery::dtRaw(){
-  return _dt;
-}
 
 long EncoderEvery::read()
 {
@@ -107,13 +110,11 @@ void EncoderEvery::_tick()
     _forward = false;
   }
 
-  // update dt
-  unsigned long now = micros();
-  _dt = now - _previous;
-  _previous = now;
-  _dtavg.push(_dt);
-     
-
+  // update last tick time
+  _previous_time_previous = _previous_time;
+  _previous_time = micros();
+  _dt_avg->push(_previous_time - _previous_time_previous);
+  _ts_ticks++;
 }
 
 void EncoderEvery::_tick_90()
@@ -136,11 +137,11 @@ void EncoderEvery::_tick_90()
     _forward = false;
   }
 
-  // update dt
-  unsigned long now = micros();
-  _dt = now - _previous;
-  _previous = now;
-  _dtavg.push(_dt); 
+  // update last tick time
+  _previous_time_previous = _previous_time;
+  _previous_time = micros();
+  _dt_avg->push(_previous_time - _previous_time_previous);
+  _ts_ticks++;
 }
 
 bool EncoderEvery::isReversed()
@@ -201,3 +202,44 @@ void EncoderEvery::ISRHandlerD_90()
 
   EncoderEvery::ISR_D->_tick_90();
 }
+
+
+
+//.----|    .     .     .    .    .    .    .---|
+//  ^--- this is previous time delta           ^-- curent delta
+void EncoderEvery::updateSpeed(unsigned long& now, const unsigned long& ts)
+{
+  // 60 mill useconds in 60 seconds
+  //unsigned long sample_delta = now - _previous_time;
+  unsigned long sample_delta = now - estimate_previous_time_using_dt_avg();
+  _rpm = (_ts_ticks * 60000000ul) / ( (ts + _previous_sample_delta - sample_delta) * _tpr);
+  
+  _previous_sample_delta = sample_delta;
+  
+  _ts_ticks = 0;
+
+}
+
+unsigned long EncoderEvery::rpm()
+{
+  return _rpm;
+}
+
+float EncoderEvery::rps(){
+  //return _rps;
+  return (float) _rpm / 60.0f;
+}
+
+unsigned long EncoderEvery::estimate_previous_time_using_dt_avg(){
+
+  unsigned long sum = 0;
+
+  for(unsigned int idx = 0; idx < _tpr ; idx++){
+    sum += _dt_avg->get(idx) * (idx +1);
+  }
+
+  return _previous_time - (sum / (_tpr+1)) + ( _dt_avg->avg() *  (_tpr / 2));
+
+}
+
+

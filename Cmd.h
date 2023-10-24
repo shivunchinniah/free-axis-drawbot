@@ -51,7 +51,7 @@ typedef struct _cmd_t
     void (*func)(int argc, char **argv);
     struct _cmd_t *next;
 } cmd_t;
-
+static bool output_buffer = true;
 void cmdInit(uint32_t speed);
 void cmdPoll();
 void cmdAdd(const char *name, void (*func)(int argc, char **argv));

@@ -34,7 +34,19 @@
     "**/.vscode/**"
   ],
   "files.associations": {
-    "typeinfo": "cpp"
+    "typeinfo": "cpp",
+    "__hash_table": "cpp",
+    "__split_buffer": "cpp",
+    "atomic": "cpp",
+    "ios": "cpp",
+    "string": "cpp",
+    "system_error": "cpp",
+    "unordered_map": "cpp",
+    "vector": "cpp",
+    "*.tpp": "cpp",
+    "random": "cpp",
+    "limits": "cpp",
+    "ranges": "cpp"
   },
   "C_Cpp_Runner.msvcWarnings": [
     "/W4",
@@ -56,5 +68,6 @@
   "C_Cpp_Runner.useUndefinedSanitizer": false,
   "C_Cpp_Runner.useLeakSanitizer": false,
   "C_Cpp_Runner.showCompilationTime": false,
-  "C_Cpp_Runner.useLinkTimeOptimization": false
+  "C_Cpp_Runner.useLinkTimeOptimization": false,
+  "C_Cpp_Runner.msvcSecureNoWarnings": false
 }

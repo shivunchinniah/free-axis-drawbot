@@ -7,9 +7,9 @@
       "request": "launch",
       "args": [],
       "stopAtEntry": false,
-      "externalConsole": true,
-      "cwd": "s:/Documents/Arduino/robot_logger",
-      "program": "s:/Documents/Arduino/robot_logger/build/Debug/outDebug",
+      "externalConsole": false,
+      "cwd": "/Users/shivun/Documents/Robot/free-axis-drawbot",
+      "program": "/Users/shivun/Documents/Robot/free-axis-drawbot/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
