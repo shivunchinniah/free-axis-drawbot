@@ -46,7 +46,8 @@
     "*.tpp": "cpp",
     "random": "cpp",
     "limits": "cpp",
-    "ranges": "cpp"
+    "ranges": "cpp",
+    "chrono": "cpp"
   },
   "C_Cpp_Runner.msvcWarnings": [
     "/W4",

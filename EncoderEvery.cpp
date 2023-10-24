@@ -16,8 +16,12 @@ EncoderEvery::EncoderEvery(unsigned int triggerPin, unsigned int directionPin, c
   _previous_time_previous = micros();
 
   _tpr = poles;
+  _tpr_over_2 = (unsigned long) (poles /2);
+
+  _threshold_rpm = 60000 / (5 * _tpr);
 
   _dt_avg = new RollingAverage<unsigned long>(poles);
+  _ts_avg = new RollingAverage<unsigned long>(poles);
 
 
   _previous_sample_delta = 0;
@@ -113,6 +117,7 @@ void EncoderEvery::_tick()
   // update last tick time
   _previous_time_previous = _previous_time;
   _previous_time = micros();
+  _ts_avg->push(_previous_time);
   _dt_avg->push(_previous_time - _previous_time_previous);
   _ts_ticks++;
 }
@@ -140,6 +145,7 @@ void EncoderEvery::_tick_90()
   // update last tick time
   _previous_time_previous = _previous_time;
   _previous_time = micros();
+  _ts_avg->push(_previous_time);
   _dt_avg->push(_previous_time - _previous_time_previous);
   _ts_ticks++;
 }
@@ -209,10 +215,21 @@ void EncoderEvery::ISRHandlerD_90()
 //  ^--- this is previous time delta           ^-- curent delta
 void EncoderEvery::updateSpeed(unsigned long& now, const unsigned long& ts)
 {
+
+  if(_ts_ticks == 0){
+    _blank_intervals ++;
+  }
+  else {
+    _blank_intervals = 1;
+  
+  }
   // 60 mill useconds in 60 seconds
   //unsigned long sample_delta = now - _previous_time;
   unsigned long sample_delta = now - estimate_previous_time_using_dt_avg();
-  _rpm = (_ts_ticks * 60000000ul) / ( (ts + _previous_sample_delta - sample_delta) * _tpr);
+  //unsigned long sample_delta = now - _ts_avg->avglarge();
+
+  
+  _rpm = (_ts_ticks * 60000000ul) / ( ((ts * _blank_intervals) + _previous_sample_delta - sample_delta ) * _tpr);
   
   _previous_sample_delta = sample_delta;
   
@@ -221,8 +238,15 @@ void EncoderEvery::updateSpeed(unsigned long& now, const unsigned long& ts)
 }
 
 unsigned long EncoderEvery::rpm()
-{
-  return _rpm;
+{ 
+  if(_rpm > _threshold_rpm)
+  {
+    return rpm_dt();
+  }
+  else {
+    return _rpm;
+  }
+
 }
 
 float EncoderEvery::rps(){
@@ -230,15 +254,20 @@ float EncoderEvery::rps(){
   return (float) _rpm / 60.0f;
 }
 
+unsigned long EncoderEvery::rpm_dt(){
+  return 60000000 / (_tpr * _dt_avg->avg());
+}
+
 unsigned long EncoderEvery::estimate_previous_time_using_dt_avg(){
 
-  unsigned long sum = 0;
+  // unsigned long sum = 0;
 
-  for(unsigned int idx = 0; idx < _tpr ; idx++){
-    sum += _dt_avg->get(idx) * (idx +1);
-  }
+  // for(unsigned int idx = 1; idx < _tpr  ; idx++){
+  //  sum += (_dt_avg->get(_tpr - idx) * ((unsigned long)idx));
+  // }
 
-  return _previous_time - (sum / (_tpr+1)) + ( _dt_avg->avg() *  (_tpr / 2));
+  //return _previous_time - (sum/_tpr) + ( (_dt_avg->avg() *  _tpr_over_2));
+  return _ts_avg->avglarge() + ( _dt_avg->avg() *  (_tpr_over_2));
 
 }
 
