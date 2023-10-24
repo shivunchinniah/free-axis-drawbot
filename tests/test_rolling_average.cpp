@@ -1,34 +1,11 @@
 #include <stdio.h>
 #include <iostream>
 #include <stdlib.h>
+#include "basic_testing.hpp"
 
 #include "../RollingAverage.h"
 
 using namespace std;
-
-int testSucceed = 0;
-int testFail = 0;
-int tests = 0;
-
-void newtest(string test){
-    cout << "Test: "<< test << " --- " ;
-    tests++;
-}
-
-void testresult(bool res){
-    if(res){
-        testSucceed++;
-        cout << "Test Passes" << endl;
-    }
-    else {
-        testFail++;
-        cout << "Test Failed!" << endl;
-    }
-}
-
-void printstats(){
-    cout << testSucceed << " test passed, " << testFail << " tests failed, Total: " << tests << endl; 
-}
 
 
 class Test{
@@ -93,10 +70,6 @@ int main(){
         testresult(x.testbuffer->get(i) == i);
     
     }
-
-    
-
-
 
     printstats();
 
