@@ -14,7 +14,6 @@
 #define MOTOR_B_ENC_0 8
 #define MOTOR_B_ENC_90 3
 
-
 #define A_TICKS_ROT 2058 // 12 * 171
 #define B_TICKS_ROT 2736 // 16 * 171
 
@@ -27,20 +26,18 @@ RollingAverage<float> speedStatsA(128);
 RollingAverage<float> speedStatsB(128);
 unsigned long previous_speed_time = micros();
 
-
-
-
 // loop sample time target
 const unsigned long ts = 5000ul; // 5000 microseconds = 5 ms
 
-inline void updateStats(){
+inline void updateStats()
+{
   unsigned long now = micros();
   cpuStats.push(now - previous);
   previous = now;
 }
 
-
-void printStats(){
+void printStats()
+{
 
   // Loop budget 20MHz --> 0.05 micro seconds per instruction
   // Motor max rpm is 33 @ 6V and 66rpm @ 12V however there is 171:1 reduction
@@ -51,16 +48,22 @@ void printStats(){
   // that is 5ms loop period
 
   // Compute number of free instructions
-  
 
-  //const unsigned long available_microseconds = 1000; // 5 ms in a u_seconds
+  // const unsigned long available_microseconds = 1000; // 5 ms in a u_seconds
+  char tString[10];
+
+  Serial.print("F_CPU: ");
+  Serial.println(ltoa(F_CPU, tString, 10));
+
+  Serial.print("Clock Speed, 1=16MHz, 2=20MHz: ");
+  Serial.println(ltoa(FUSE.OSCCFG, tString, 10));
 
   Serial.print(cpuStats.avg());
   Serial.print(" us, min: ");
   Serial.print(cpuStats.min());
   Serial.print(" us, max: ");
   Serial.println(cpuStats.max());
-  
+
   Serial.print(cpuStats.avg() * 100ul / ts);
   Serial.print("% used for ");
   Serial.print(ts);
@@ -75,20 +78,20 @@ L298M motorB(MOTOR_B1, MOTOR_B2);
 
 #define VERSION 1.5
 
-
-inline void updateSpeedStats(){
+inline void updateSpeedStats()
+{
   unsigned long now = micros();
-  
-  // push every 5ms or 200Hz
-  //if(now - previous_speed_time >= 5000){
-    speedStatsA.push(encoderA.rpm());
-    speedStatsB.push(encoderB.rpm());
-    previous_speed_time = now;
-  //}
 
+  // push every 5ms or 200Hz
+  // if(now - previous_speed_time >= 5000){
+  speedStatsA.push(encoderA.rpm());
+  speedStatsB.push(encoderB.rpm());
+  previous_speed_time = now;
+  //}
 }
 
-void getspeed(){
+void getspeed()
+{
   Serial.println(micros());
   Serial.println("Rotations per second:");
   Serial.print("Mean:\t");
@@ -99,11 +102,9 @@ void getspeed(){
   printlnMatrix(speedStatsA.max(), speedStatsB.max());
 }
 
+void setup()
+{
 
-
-void setup() {
-
-  Serial.begin(115200);
   cmdInit(115200);
 
   cmdAdd("v", version);
@@ -117,28 +118,27 @@ void setup() {
 
   cmdAdd("bs", startstream);
   cmdAdd("es", stopstream);
-
 }
-
 
 unsigned long previous_200Hz = micros();
 
-
-
 bool streaming = false;
 
-void loop() {
+void loop()
+{
 
   unsigned long now = micros();
 
   unsigned long actual_ts = now - previous_200Hz;
-  if(now - previous_200Hz >= ts){
+  if (now - previous_200Hz >= ts)
+  {
     encoderA.updateSpeed(now, actual_ts);
     encoderB.updateSpeed(now, actual_ts);
 
     updateSpeedStats();
 
-    if(streaming){
+    if (streaming)
+    {
       streamspeed(now);
     }
 
@@ -149,12 +149,14 @@ void loop() {
   updateStats();
 }
 
-void version(){
+void version()
+{
   Serial.println(VERSION);
 }
 
-void streamspeed(unsigned long now){
-  
+void streamspeed(unsigned long now)
+{
+
   // Serial.print(encoderA.rpm_dt());
   // Serial.print(",");
   // Serial.print(encoderB.rpm_dt());
@@ -162,21 +164,22 @@ void streamspeed(unsigned long now){
   Serial.print(encoderA.rpm());
   Serial.print(",");
   Serial.println(encoderB.rpm());
-  
 }
 
-void stopstream(){
+void stopstream()
+{
   streaming = false;
   output_buffer = true;
 }
 
-void startstream(){
+void startstream()
+{
   streaming = true;
   output_buffer = false;
 }
 
-
-void stopMotors(int argc, char **args) {
+void stopMotors(int argc, char **args)
+{
   Serial.println("Stop");
 
   motorA.setHold(false);
@@ -186,8 +189,10 @@ void stopMotors(int argc, char **args) {
   motorB.stop();
 }
 
-void setMotors(int argc, char **args) {
-  if (argc >= 3) {
+void setMotors(int argc, char **args)
+{
+  if (argc >= 3)
+  {
     motorA.setVector(String(args[1]).toInt());
     motorB.setVector(String(args[2]).toInt());
 
@@ -199,14 +204,16 @@ void setMotors(int argc, char **args) {
   }
 }
 
-void resetEncoders(int argc, char **args) {
+void resetEncoders(int argc, char **args)
+{
   encoderA.write(0l);
   encoderB.write(0l);
 
   Serial.println("Encoders Reset");
 }
 
-void readEncoders(int argc, char **args) {
+void readEncoders(int argc, char **args)
+{
   Serial.println(micros());
   Serial.println("Encoders:");
   Serial.print("Rot:\t");
@@ -215,10 +222,9 @@ void readEncoders(int argc, char **args) {
   printlnMatrix(encoderA.read(), encoderB.read());
 }
 
-
-
-template<typename T>
-void printlnMatrix(T a, T b) {
+template <typename T>
+void printlnMatrix(T a, T b)
+{
   Serial.print("[");
   Serial.print(a);
   Serial.print(", ");
@@ -226,13 +232,12 @@ void printlnMatrix(T a, T b) {
   Serial.println("]");
 }
 
-
-double rawToRotA(long raw) {
+double rawToRotA(long raw)
+{
   return (double)raw / A_TICKS_ROT;
 }
 
-double rawToRotB(long raw) {
+double rawToRotB(long raw)
+{
   return (double)raw / B_TICKS_ROT;
 }
-
-

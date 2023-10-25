@@ -3,5 +3,5 @@
     "configuration": "mode=off",
     "board": "arduino:megaavr:nona4809",
     "programmer": "arduino:medbg",
-    "sketch": "robot_logger.ino"
+    "sketch": "free-axis-drawbot.ino"
 }
