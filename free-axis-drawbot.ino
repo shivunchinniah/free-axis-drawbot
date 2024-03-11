@@ -1,6 +1,7 @@
 #include "Cmd.h"
 #include "EncoderEvery.h"
 #include "L298M.h"
+#include "PID.hpp"
 
 #define MOTOR_A1 5
 #define MOTOR_A2 9
@@ -118,11 +119,21 @@ void setup()
 
   cmdAdd("bs", startstream);
   cmdAdd("es", stopstream);
+  cmdAdd("spid", setpid);
+  cmdAdd("gpid", getpid);
+  cmdAdd("stoppid", stoppid);
+  cmdAdd("startpid", startpid);
 }
 
 unsigned long previous_200Hz = micros();
 
 bool streaming = false;
+
+// PID motor A
+float aRPM = 0.0f, aTargRPM = 10000.0f;
+// PID::K aK = {10, 0, 0};
+PID aPID(&aRPM, &aTargRPM, PID::K{10, 0, 0}, (float)ts * 1e-6, 0, 255);
+bool aPIDOn = false;
 
 void loop()
 {
@@ -136,6 +147,16 @@ void loop()
     encoderB.updateSpeed(now, actual_ts);
 
     updateSpeedStats();
+
+    // update feedback
+
+    if (aPIDOn)
+    {
+      aRPM = (float)encoderA.rpm();
+      float control = aPID.computeControl();
+      motorA.setVector((int16_t)control);
+      motorA.run();
+    }
 
     if (streaming)
     {
@@ -161,6 +182,10 @@ void streamspeed(unsigned long now)
   // Serial.print(",");
   // Serial.print(encoderB.rpm_dt());
   // Serial.print(",");
+  Serial.print(aPID.getError());
+  Serial.print(",");
+  Serial.print(aPID.getControl());
+  Serial.print(",");
   Serial.print(encoderA.rpm());
   Serial.print(",");
   Serial.println(encoderB.rpm());
@@ -204,6 +229,43 @@ void setMotors(int argc, char **args)
   }
 }
 
+void setpid(int argc, char **args)
+{
+  if (argc >= 4)
+  {
+
+    PID::K temp = {String(args[1]).toFloat(), String(args[2]).toFloat(), String(args[3]).toFloat()};
+
+    aPID.setKParams(temp);
+
+    Serial.println("Updated PID K parameters:");
+    printlnMatrix3(aPID.getKParams().p, aPID.getKParams().i, aPID.getKParams().d);
+  }
+}
+void getpid(int argc, char **args)
+{
+  Serial.print("Error: ");
+  Serial.println(aPID.getError());
+
+  Serial.print("Control: ");
+  Serial.println(aPID.getControl());
+
+  Serial.println("PID K parameters:");
+  printlnMatrix3(aPID.getKParams().p, aPID.getKParams().i, aPID.getKParams().d);
+}
+
+void stoppid()
+{
+  aPIDOn = false;
+  Serial.println("Stop PID");
+}
+
+void startpid(int argc, char **args){
+  aPIDOn = true;
+  aPID.restart();
+  Serial.println("Start PID");
+}
+
 void resetEncoders(int argc, char **args)
 {
   encoderA.write(0l);
@@ -229,6 +291,18 @@ void printlnMatrix(T a, T b)
   Serial.print(a);
   Serial.print(", ");
   Serial.print(b);
+  Serial.println("]");
+}
+
+template <typename T>
+void printlnMatrix3(T a, T b, T c)
+{
+  Serial.print("[");
+  Serial.print(a);
+  Serial.print(", ");
+  Serial.print(b);
+  Serial.print(", ");
+  Serial.print(c);
   Serial.println("]");
 }
 

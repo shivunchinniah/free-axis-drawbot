@@ -1,5 +1,5 @@
 #ifndef PID_H
-#def PID_H
+#define PID_H
 
 class PID{
 
@@ -16,7 +16,7 @@ class PID{
 
     PID(float* feedback, float* target, const K& k, const float& Ts, const float& minControl, const float& maxControl){
         _feedback = feedback;
-        _control = control;
+        _target = target;
         _error_sum = 0;
         _k = k;
         _ts = Ts;
@@ -55,11 +55,11 @@ class PID{
     }
 
 
-    float computeControl(const unsigned long &Ts){
+    float computeControl(){
 
-        _error = *target - *feedback; // For p
+        _error = *_target - *_feedback; // For p
         _error_sum += _k.i *_error; // For i
-        _d_feedback = *feedback - _feedback_previous; // For d
+        float _d_feedback = *_feedback - _feedback_previous; // For d
 
 
         _control = (_k.p * _error) + (_error_sum) - (_k.d * _d_feedback);
@@ -68,17 +68,23 @@ class PID{
         _feedback_previous = *_feedback;
 
 
-        if(out > _MAX_CONTROL){
-            return _MAX_CONTROL;
+        if(_control > _MAX_CONTROL){
+            _control =  _MAX_CONTROL;
         }
-        else if(out < _MIN_CONTROL){
-            return _MIN_CONTROL;
+        else if(_control < _MIN_CONTROL){
+            _control = _MIN_CONTROL;
         }
+
+        return _control;
 
     }
 
     float getError(){
         return _error;
+    }
+
+    float getControl(){
+        return _control;
     }
 
 
