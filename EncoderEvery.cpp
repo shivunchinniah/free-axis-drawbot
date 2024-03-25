@@ -12,19 +12,9 @@ EncoderEvery::EncoderEvery(unsigned int triggerPin, unsigned int directionPin, c
   // Initialise
   _ticks = 0;
   _ts_ticks = 0;
-  _previous_time = micros(); // initialise to when object is created
-  _previous_time_previous = micros();
 
   _tpr = poles;
-  _tpr_over_2 = (unsigned long) (poles /2);
 
-  _threshold_rpm = 60000 / (5 * _tpr);
-
-  _dt_avg = new RollingAverage<unsigned long>(poles);
-  _ts_avg = new RollingAverage<unsigned long>(poles);
-
-
-  _previous_sample_delta = 0;
   _triggerPin = triggerPin;
   _directionPin = directionPin;
   _forward = true;
@@ -34,52 +24,48 @@ EncoderEvery::EncoderEvery(unsigned int triggerPin, unsigned int directionPin, c
 
   switch (channel)
   {
-    case 'A':
-    case 'a':
-      ISRHandler = &ISRHandlerA;
-      ISRHandler_90 = &ISRHandlerA_90;
-      EncoderEvery::ISR_A = this;
-      break;
+  case 'A':
+  case 'a':
+    ISRHandler = &ISRHandlerA;
+    ISRHandler_90 = &ISRHandlerA_90;
+    EncoderEvery::ISR_A = this;
+    break;
 
-    case 'B':
-    case 'b':
-      ISRHandler = &ISRHandlerB;
-      ISRHandler_90 = &ISRHandlerB_90;
-      EncoderEvery::ISR_B = this;
-      break;
+  case 'B':
+  case 'b':
+    ISRHandler = &ISRHandlerB;
+    ISRHandler_90 = &ISRHandlerB_90;
+    EncoderEvery::ISR_B = this;
+    break;
 
-    case 'C':
-    case 'c':
-      ISRHandler = &ISRHandlerC;
-      ISRHandler_90 = &ISRHandlerC_90;
-      EncoderEvery::ISR_C = this;
-      break;
+  case 'C':
+  case 'c':
+    ISRHandler = &ISRHandlerC;
+    ISRHandler_90 = &ISRHandlerC_90;
+    EncoderEvery::ISR_C = this;
+    break;
 
-    case 'D':
-    case 'd':
-      ISRHandler = &ISRHandlerD;
-      ISRHandler_90 = &ISRHandlerD_90;
-      EncoderEvery::ISR_D = this;
-      break;
+  case 'D':
+  case 'd':
+    ISRHandler = &ISRHandlerD;
+    ISRHandler_90 = &ISRHandlerD_90;
+    EncoderEvery::ISR_D = this;
+    break;
 
-    default:
-      break;
+  default:
+    break;
   }
 
- // Nano Every has Interupts on all pins
- attachInterrupt(digitalPinToInterrupt(_triggerPin), ISRHandler, CHANGE);
- attachInterrupt(digitalPinToInterrupt(_directionPin), ISRHandler_90, CHANGE);
+  // Nano Every has Interrupts on all pins
+  attachInterrupt(digitalPinToInterrupt(_triggerPin), ISRHandler, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(_directionPin), ISRHandler_90, CHANGE);
 
+  // Pre-calculate Port and Pin Bitmasks
+  _bitMaskTriggerPin = digitalPinToBitMask(_triggerPin);
+  _bitMaskDirectionPin = digitalPinToBitMask(_directionPin);
 
-}
-
-
-bool EncoderEvery::forward(){
-  return _forward;
-}
-
-bool EncoderEvery::backward(){
-  return !_forward;
+  _triggerPort = digitalPinToPort(_triggerPin);
+  _directionPort = digitalPinToPort(_directionPin);
 }
 
 
@@ -97,11 +83,11 @@ void EncoderEvery::write(long ticks)
 void EncoderEvery::_tick()
 {
 
-  bool trigger = digitalRead(_triggerPin);
-  bool direction = digitalRead(_directionPin);
-
   // XOR to determine direction of rotation
-  if (trigger ^ direction ^ _reversed)
+  if (
+      (_triggerPin & _triggerPort) ^
+      (_directionPin & _directionPort) ^
+      _reversed)
   {
     // CW
     _ticks++;
@@ -113,13 +99,6 @@ void EncoderEvery::_tick()
     _ticks--;
     _forward = false;
   }
-
-  // update last tick time
-  _previous_time_previous = _previous_time;
-  _previous_time = micros();
-  _ts_avg->push(_previous_time);
-  _dt_avg->push(_previous_time - _previous_time_previous);
-  _ts_ticks++;
 }
 
 void EncoderEvery::_tick_90()
@@ -129,7 +108,10 @@ void EncoderEvery::_tick_90()
   bool direction = digitalRead(_directionPin);
 
   // XOR to determine direction of rotation
-  if (!trigger ^ direction ^ _reversed)
+  if (
+      (_triggerPin & _triggerPort) ^
+      (_directionPin & _directionPort) ^
+      !_reversed)
   {
     // CW
     _ticks++;
@@ -141,13 +123,6 @@ void EncoderEvery::_tick_90()
     _ticks--;
     _forward = false;
   }
-
-  // update last tick time
-  _previous_time_previous = _previous_time;
-  _previous_time = micros();
-  _ts_avg->push(_previous_time);
-  _dt_avg->push(_previous_time - _previous_time_previous);
-  _ts_ticks++;
 }
 
 bool EncoderEvery::isReversed()
@@ -209,66 +184,31 @@ void EncoderEvery::ISRHandlerD_90()
   EncoderEvery::ISR_D->_tick_90();
 }
 
-
-
-//.----|    .     .     .    .    .    .    .---|
-//  ^--- this is previous time delta           ^-- curent delta
-void EncoderEvery::updateSpeed(unsigned long& now, const unsigned long& ts)
+void EncoderEvery::updateSpeed(const long &ts)
 {
 
-  if(_ts_ticks == 0){
-    _blank_intervals ++;
-  }
-  else {
-    _blank_intervals = 1;
-  
-  }
-  // 60 mill useconds in 60 seconds
-  //unsigned long sample_delta = now - _previous_time;
-  unsigned long sample_delta = now - estimate_previous_time_using_dt_avg();
-  //unsigned long sample_delta = now - _ts_avg->avglarge();
+  // Simple Speed Measurement:
+  // speed = rot / time
 
-  
-  _rpm = (_ts_ticks * 60000000ul) / ( ((ts * _blank_intervals) + _previous_sample_delta - sample_delta ) * _tpr);
-  
-  _previous_sample_delta = sample_delta;
-  
-  _ts_ticks = 0;
+  if (_ticks < _ts_ticks)
+  {
+    _rpm = ((_ts_ticks - _ticks) * 60000000ul) / (ts * _tpr);
+  }
+  else
+  {
+    _rpm = ((_ticks - _ts_ticks) * 60000000ul) / (ts * _tpr);
+  }
 
+  _ts_ticks = _ticks;
 }
 
 unsigned long EncoderEvery::rpm()
-{ 
-  if(_rpm > _threshold_rpm)
-  {
-    return rpm_dt();
-  }
-  else {
-    return _rpm;
-  }
-
+{
+  return _rpm;
 }
 
-float EncoderEvery::rps(){
-  //return _rps;
-  return (float) _rpm / 60.0f;
+float EncoderEvery::rps()
+{
+  // return _rps;
+  return (float)_rpm / 60.0f;
 }
-
-unsigned long EncoderEvery::rpm_dt(){
-  return 60000000 / (_tpr * _dt_avg->avg());
-}
-
-unsigned long EncoderEvery::estimate_previous_time_using_dt_avg(){
-
-  // unsigned long sum = 0;
-
-  // for(unsigned int idx = 1; idx < _tpr  ; idx++){
-  //  sum += (_dt_avg->get(_tpr - idx) * ((unsigned long)idx));
-  // }
-
-  //return _previous_time - (sum/_tpr) + ( (_dt_avg->avg() *  _tpr_over_2));
-  return _ts_avg->avglarge() + ( _dt_avg->avg() *  (_tpr_over_2));
-
-}
-
-

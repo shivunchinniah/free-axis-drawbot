@@ -143,8 +143,8 @@ void loop()
   unsigned long actual_ts = now - previous_200Hz;
   if (now - previous_200Hz >= ts)
   {
-    encoderA.updateSpeed(now, actual_ts);
-    encoderB.updateSpeed(now, actual_ts);
+    encoderA.updateSpeed((long)actual_ts);
+    encoderB.updateSpeed((long)actual_ts);
 
     updateSpeedStats();
 
